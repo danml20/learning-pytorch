@@ -1,1 +1,1 @@
-'''Entry point to choose which model to train'''
+'''Entry point to choose which model to train: setup device - load data - initialise model, loss, optimiser - train and eval'''

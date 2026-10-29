@@ -44,7 +44,7 @@ def evaluate_classification(model, dataloader, criterion, device):
 
             outputs = model(inputs) # raw logits 
 
-            loss += criterion(outputs, labels).items()
+            loss += criterion(outputs, labels).item()
 
             _, predicted = torch.max(outputs.data, dim=1) # on raw data (doesnt carry gradient history), max returns (vals, idxs)
 
@@ -53,7 +53,7 @@ def evaluate_classification(model, dataloader, criterion, device):
 
     accuracy = 100 * correct / total
     loss = loss / len(dataloader)
-    
+
     return accuracy, loss
 
 class EarlyStopping:

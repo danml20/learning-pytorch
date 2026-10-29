@@ -16,8 +16,8 @@ import time
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-SELECTED_MODEL = "mlp"
-SELECTED_DATASET = "mnist"
+SELECTED_MODEL = "cnn"
+SELECTED_DATASET = "cifar10"
 
 # hyperparameters
 
@@ -35,10 +35,10 @@ if SELECTED_MODEL == "mlp" and SELECTED_DATASET == "mnist":
     model = MLP(layer_dims_mnist)
     path = 'mlp_params.pth'
 
-elif SELECTED_MODEL == "cnn" and SELECTED_DATASET == "cifar10":
+elif SELECTED_MODEL == "cnn" and SELECTED_DATASET == "mnist":
     pass
 elif SELECTED_MODEL == "cnn" and SELECTED_DATASET == "cifar10":
-    channels = []
+    channels = [3, 32, 64, 128]
     kernel_size = 3
     model = CNN(channels, kernel_size)
     path = 'cnn_params.pth'
@@ -48,7 +48,7 @@ elif SELECTED_MODEL == "cnn" and SELECTED_DATASET == "cifar10":
 criterion = nn.CrossEntropyLoss()
 optimiser = optim.Adam(model.parameters(), learning_rate)
 
-num_epochs = 20
+num_epochs = 100
 best_val_acc = 0.0
 
 early_stopping = EarlyStopping(path)
@@ -57,10 +57,11 @@ start_time = time.time()
 
 for epoch in range(num_epochs):
     train_loss = train_epoch(model, train_loader, criterion, optimiser, device)
-    print(f"train loss: {train_loss}")
+    print(f"[epoch {epoch}] train loss: {train_loss}")
 
-    val_accuracy, val_loss = evaluate_classification(model, val_loader, device)
-    print(f'validation accuracy: {val_accuracy}')
+    val_accuracy, val_loss = evaluate_classification(model, val_loader, criterion, device)
+    print(f'[epoch {epoch}] validation loss: {val_loss}')
+    print(f'[epoch {epoch}] validation accuracy: {val_accuracy}')
 
     early_stopping(val_loss, model)
 
@@ -86,6 +87,6 @@ print(f"train time: {elapsed_time} seconds")
 
 model.load_state_dict(torch.load(path))
 
-test_accuracy, test_loss = evaluate_classification(model, test_loader, device)
+test_accuracy, test_loss = evaluate_classification(model, test_loader, criterion, device)
 
 print(f"test accuracy: {test_accuracy}")

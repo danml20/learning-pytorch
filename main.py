@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from models.mlp import MLP
+from models.cnn import CNN
 from dataset import get_loaders
 from train import train_epoch, evaluate_classification
 
@@ -15,7 +16,7 @@ import time
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-SELECTED_MODEL = None
+SELECTED_MODEL = "mlp"
 SELECTED_DATASET = "mnist"
 
 # hyperparameters
@@ -30,8 +31,15 @@ train_loader, test_loader = get_loaders(SELECTED_DATASET, batch_size)
 
 # initialise corresponding model
 
-layer_dims_mnist = [28*28, 128, 128, 10] 
-model = MLP(layer_dims_mnist)
+if SELECTED_MODEL == "mlp":
+    layer_dims_mnist = [28*28, 128, 128, 10] 
+    model = MLP(layer_dims_mnist)
+    path = 'mlp_params.pth'
+elif SELECTED_MODEL == "cnn":
+    channels = []
+    kernel_size = 3
+    model = CNN(channels, kernel_size)
+    path = 'cnn_params.pth'
 
 # training loop
 
@@ -49,6 +57,10 @@ end_time = time.time()
 
 elapsed_time = end_time - start_time
 print(f"train time: {elapsed_time} seconds")
+
+
+torch.save(model.state_dict(), path)
+print(f"{SELECTED_MODEL} saved to {path}")
 
 test_accuracy = evaluate_classification(model, test_loader, device)
 

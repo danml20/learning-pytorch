@@ -3,3 +3,8 @@ data/
 # cache
 
 __pycache__
+
+# params
+
+mlp_params.pth
+cnn_params.pth

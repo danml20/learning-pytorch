@@ -23,19 +23,21 @@ SELECTED_DATASET = "mnist"
 
 batch_size = 64
 learning_rate = 0.001
-num_epochs = 10
 
 # load corresponding data
 
-train_loader, test_loader = get_loaders(SELECTED_DATASET, batch_size)
+train_loader, val_loader, test_loader = get_loaders(SELECTED_DATASET, batch_size)
 
 # initialise corresponding model
 
-if SELECTED_MODEL == "mlp":
+if SELECTED_MODEL == "mlp" and SELECTED_DATASET == "mnist":
     layer_dims_mnist = [28*28, 128, 128, 10] 
     model = MLP(layer_dims_mnist)
     path = 'mlp_params.pth'
-elif SELECTED_MODEL == "cnn":
+
+elif SELECTED_MODEL == "cnn" and SELECTED_DATASET == "cifar10":
+    pass
+elif SELECTED_MODEL == "cnn" and SELECTED_DATASET == "cifar10":
     channels = []
     kernel_size = 3
     model = CNN(channels, kernel_size)
@@ -46,12 +48,22 @@ elif SELECTED_MODEL == "cnn":
 criterion = nn.CrossEntropyLoss()
 optimiser = optim.Adam(model.parameters(), learning_rate)
 
+num_epochs = 20
+best_val_acc = 0.0
+
 start_time = time.time()
 
 for epoch in range(num_epochs):
     train_loss = train_epoch(model, train_loader, criterion, optimiser, device)
     print(f"train loss: {train_loss}")
-    # do validation set too
+
+    val_accuracy = evaluate_classification(model, val_loader, device)
+    if val_accuracy > best_val_acc:
+        best_val_acc = val_accuracy
+        torch.save(model.state_dict(), path)
+        print("saved new best model params")
+
+
 
 end_time = time.time()
 

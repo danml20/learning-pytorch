@@ -16,7 +16,7 @@ class MLP(nn.Module):
             if i < len(layer_dims) - 2: # last linear layer does not pass outputs through ReLU
                 layers.append(nn.ReLU())
 
-        self.network = nn.Sequential(*layers)
+        self.network = nn.Sequential(nn.Flatten(), *layers)
 
     def forward(self, x):
 

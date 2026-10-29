@@ -3,7 +3,7 @@
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-def get_mnist_loaders(dataset_name, batch_size=64):
+def get_loaders(dataset_name, batch_size=64):
     
     if dataset_name == "mnist":
         transform = transforms.Compose([

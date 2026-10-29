@@ -40,7 +40,7 @@ def evaluate_classification(model, dataloader, device):
             inputs = inputs.to(device)
             labels = labels.to(device)
 
-            outputs = model(inputs)
+            outputs = model(inputs) # probabiliites or raw logits 
 
             _, predicted = torch.max(outputs.data, dim=1) # on raw data (doesnt carry gradient history), max returns (vals, idxs)
 

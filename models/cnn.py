@@ -11,7 +11,7 @@ class CNN(nn.Module):
             layers.extend(
                 nn.Conv2d(channels[i], channels[i+1], kernel_size),
                 nn.ReLU(),
-                nn.MaxPool2d((2,2), 2)
+                nn.MaxPool2d(2, 2)
             )
 
         self.features = nn.Sequential(*layers)

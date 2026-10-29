@@ -1,6 +1,7 @@
 '''General and model-specific training loops'''
 
 import torch
+import numpy as np
 
 def train_epoch(model, dataloader, criterion, optimiser, device):
     '''general training loop for one epoch'''
@@ -26,11 +27,12 @@ def train_epoch(model, dataloader, criterion, optimiser, device):
 
     return running_loss / len(dataloader) # epoch average per batch 
 
-def evaluate_classification(model, dataloader, device):
+def evaluate_classification(model, dataloader, criterion, device):
     '''general evaluation loop to compute accuracy on a test or validation set'''
 
     model.eval() # eval mode: turn off dropout, batch norm, etc
 
+    loss = 0
     correct = 0
     total = 0
 
@@ -40,7 +42,9 @@ def evaluate_classification(model, dataloader, device):
             inputs = inputs.to(device)
             labels = labels.to(device)
 
-            outputs = model(inputs) # probabiliites or raw logits 
+            outputs = model(inputs) # raw logits 
+
+            loss += criterion(outputs, labels).items()
 
             _, predicted = torch.max(outputs.data, dim=1) # on raw data (doesnt carry gradient history), max returns (vals, idxs)
 
@@ -48,4 +52,34 @@ def evaluate_classification(model, dataloader, device):
             correct += (predicted == labels).sum().item()
 
     accuracy = 100 * correct / total
-    return accuracy
+    loss = loss / len(dataloader)
+    
+    return accuracy, loss
+
+class EarlyStopping:
+
+    def __init__(self, path, patience=5, delta=0.001):
+        '''args: 
+            patience (int): number of epochs to wait after last time val loss improved
+            delta (float): minimum change in given quantity to qualify as an improvement
+        '''
+        self.patience = patience
+        self.delta = delta
+        self.path = path
+        self.counter = 0
+        self.best_loss = np.inf
+        self.early_stop = False
+
+    def __call__(self, val_loss, model): # call instance directly (like a func)
+        if val_loss < self.best_loss - self.delta: # improvement
+            self.best_loss = val_loss
+            self.save_checkpoint(model)
+            self.counter = 0
+        else: # no improvement
+            self.counter += 1
+            if self.counter >= self.patience:
+                        self.early_stop = True
+
+
+    def save_checkpoint(self, model):
+        torch.save(model.state_dict(), self.path)

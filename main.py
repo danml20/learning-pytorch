@@ -6,7 +6,7 @@ import torch.optim as optim
 from models.mlp import MLP
 from models.cnn import CNN
 from dataset import get_loaders
-from train import train_epoch, evaluate_classification
+from train import train_epoch, evaluate_classification, EarlyStopping
 
 import time
 
@@ -51,17 +51,27 @@ optimiser = optim.Adam(model.parameters(), learning_rate)
 num_epochs = 20
 best_val_acc = 0.0
 
+early_stopping = EarlyStopping(path)
+
 start_time = time.time()
 
 for epoch in range(num_epochs):
     train_loss = train_epoch(model, train_loader, criterion, optimiser, device)
     print(f"train loss: {train_loss}")
 
-    val_accuracy = evaluate_classification(model, val_loader, device)
-    if val_accuracy > best_val_acc:
-        best_val_acc = val_accuracy
-        torch.save(model.state_dict(), path)
-        print("saved new best model params")
+    val_accuracy, val_loss = evaluate_classification(model, val_loader, device)
+    print(f'validation accuracy: {val_accuracy}')
+
+    early_stopping(val_loss, model)
+
+    if early_stopping.early_stop:
+        print(f"early stopping triggered")
+        break
+
+    # if val_accuracy > best_val_acc:
+    #     best_val_acc = val_accuracy
+    #     torch.save(model.state_dict(), path)
+    #     print("saved new best model params")
 
 
 
@@ -71,9 +81,11 @@ elapsed_time = end_time - start_time
 print(f"train time: {elapsed_time} seconds")
 
 
-torch.save(model.state_dict(), path)
-print(f"{SELECTED_MODEL} saved to {path}")
+# torch.save(model.state_dict(), path)
+# print(f"{SELECTED_MODEL} saved to {path}")
 
-test_accuracy = evaluate_classification(model, test_loader, device)
+model.load_state_dict(torch.load(path))
+
+test_accuracy, test_loss = evaluate_classification(model, test_loader, device)
 
 print(f"test accuracy: {test_accuracy}")
